@@ -1688,7 +1688,7 @@ void rtl838x_set_receive_management_action(int port, rma_ctrl_t type, action_typ
 	}
 }
 
-static void rtl838x_set_sw_led_state(struct rtl838x_switch_priv *priv, int port, int led, bool sw_control, bool led_state) {
+static void rtl838x_led_sw_set(struct rtl838x_switch_priv *priv, int port, int led, bool sw_control, bool led_state) {
 	pr_info("%s port=%d led=%d sw_control=%d led_state=%d\n", __func__, port, led, sw_control, led_state);
 }
 
@@ -1766,7 +1766,7 @@ static void rtl838x_led_init(struct rtl838x_switch_priv *priv)
 	sw_w32(led_p_en_ctrl, RTL838X_LED_P_EN_CTRL);
 
 	// setup sysfs for manual control
-	rtl83xx_led_sw_sysfs_init(priv, &rtl838x_set_sw_led_state);
+	rtl83xx_led_sw_sysfs_init(priv);
 }
 
 const struct rtl838x_reg rtl838x_reg = {
@@ -1855,6 +1855,7 @@ const struct rtl838x_reg rtl838x_reg = {
 	.set_distribution_algorithm = rtl838x_set_distribution_algorithm,
 	.set_receive_management_action = rtl838x_set_receive_management_action,
 	.led_init = rtl838x_led_init,
+	led_sw_set = rtl838x_led_sw_set,
 };
 
 irqreturn_t rtl838x_switch_irq(int irq, void *dev_id)
