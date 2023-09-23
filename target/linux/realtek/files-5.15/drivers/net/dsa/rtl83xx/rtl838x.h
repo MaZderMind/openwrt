@@ -370,6 +370,7 @@
 #define RTL838X_TRK_MBR_CTR                     (0x3E00)
 #define RTL838X_TRK_HASH_IDX_CTRL               (0x3E20)
 #define RTL838X_TRK_HASH_CTRL                   (0x3E24)
+#define RTL838X_TRK_SEP_TRAFFIC_CTRL            (0X3E2C)
 
 #define RTL839X_TRK_MBR_CTR                     (0x2200)
 #define RTL839X_TRK_HASH_IDX_CTRL               (0x2280)
