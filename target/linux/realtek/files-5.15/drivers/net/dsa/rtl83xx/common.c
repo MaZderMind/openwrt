@@ -1450,6 +1450,14 @@ static int rtl83xx_fib_event(struct notifier_block *this, unsigned long event, v
 	return NOTIFY_DONE;
 }
 
+static int rtl83xx_led_sw_sysfs_init(struct rtl838x_switch_priv *priv,
+	void(*set_sw_led_state)(struct rtl838x_switch_priv *priv, int port, int led, bool sw_control, bool led_state)) {
+
+	set_sw_led_state(priv, 23, 43, true, false);
+
+	return 0;
+}
+
 static int __init rtl83xx_sw_probe(struct platform_device *pdev)
 {
 	int err = 0;
