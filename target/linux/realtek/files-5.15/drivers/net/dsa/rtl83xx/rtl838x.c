@@ -1855,7 +1855,7 @@ const struct rtl838x_reg rtl838x_reg = {
 	.set_distribution_algorithm = rtl838x_set_distribution_algorithm,
 	.set_receive_management_action = rtl838x_set_receive_management_action,
 	.led_init = rtl838x_led_init,
-	led_sw_set = rtl838x_led_sw_set,
+	.led_sw_set = rtl838x_led_sw_set,
 };
 
 irqreturn_t rtl838x_switch_irq(int irq, void *dev_id)
