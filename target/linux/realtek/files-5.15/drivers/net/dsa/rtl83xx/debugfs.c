@@ -583,6 +583,8 @@ void rtl838x_dbgfs_init(struct rtl838x_switch_priv *priv)
 	struct dentry *rtl838x_dir;
 	struct dentry *port_dir;
 	struct dentry *mirror_dir;
+	struct dentry *lag_dir;
+	struct dentry *lag_entry_dir;
 	struct debugfs_regset32 *port_ctrl_regset;
 	int ret;
 	char lag_name[10];
@@ -622,8 +624,25 @@ void rtl838x_dbgfs_init(struct rtl838x_switch_priv *priv)
 	debugfs_create_u8("id", 0444, port_dir, &priv->cpu_port);
 
 	/* Create entries for LAGs */
+	lag_dir = debugfs_create_dir("lag", rtl838x_dir);
+	if (priv->family_id == RTL8380_FAMILY_ID) {
+		debugfs_create_x32("hash_idx_ctrl", 0644, lag_dir,
+			(u32 *)(RTL838X_SW_BASE + RTL838X_TRK_HASH_IDX_CTRL));
+		debugfs_create_x32("trk_hash_ctrl", 0644, lag_dir,
+			(u32 *)(RTL838X_SW_BASE + RTL838X_TRK_HASH_CTRL));
+		debugfs_create_x32("trk_sep_traffic_ctrl", 0644, lag_dir,
+			(u32 *)(RTL838X_SW_BASE + RTL838X_TRK_SEP_TRAFFIC_CTRL));
+	} else {
+		debugfs_create_x32("hash_idx_ctrl", 0644, lag_dir,
+			(u32 *)(RTL838X_SW_BASE + RTL839X_TRK_HASH_IDX_CTRL));
+		debugfs_create_x32("trk_hash_ctrl", 0644, lag_dir,
+			(u32 *)(RTL838X_SW_BASE + RTL839X_TRK_HASH_CTRL));
+		debugfs_create_x32("trk_sep_traffic_ctrl", 0644, lag_dir,
+			(u32 *)(RTL838X_SW_BASE + RTL839X_TRK_SEP_TRAFFIC_CTRL));
+	}
+
 	for (int i = 0; i < priv->n_lags; i++) {
-		snprintf(lag_name, sizeof(lag_name), "lag.%02d", i);
+		snprintf(lag_name, sizeof(lag_name), "trk_mbr_ctr.%02d", i);
 		if (priv->family_id == RTL8380_FAMILY_ID)
 			debugfs_create_x32(lag_name, 0644, rtl838x_dir,
 				(u32 *)(RTL838X_SW_BASE + priv->r->trk_mbr_ctr(i)));
