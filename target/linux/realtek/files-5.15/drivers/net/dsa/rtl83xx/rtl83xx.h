@@ -133,7 +133,7 @@ void rtl931x_sds_init(u32 sds, phy_interface_t mode);
 int rtl83xx_lag_add(struct dsa_switch *ds, int group, int port, struct netdev_lag_upper_info *info);
 int rtl83xx_lag_del(struct dsa_switch *ds, int group, int port);
 
-static int rtl83xx_led_sw_sysfs_init(struct rtl838x_switch_priv *priv,
+int rtl83xx_led_sw_sysfs_init(struct rtl838x_switch_priv *priv,
 	void(*set_sw_led_state)(struct rtl838x_switch_priv *priv, int port, int led, bool sw_control, bool led_state));
 
 #endif /* _NET_DSA_RTL83XX_H */
