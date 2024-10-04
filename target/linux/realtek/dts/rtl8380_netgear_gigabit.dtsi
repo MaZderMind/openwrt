@@ -138,4 +138,8 @@
 			};
 		};
 	};
+
+	port-leds {
+		led-control-mode = <RTL838X_LEDS_CONTROL_MODE_SERIAL>;
+	};
 };

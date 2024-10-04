@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
 #include <asm/mach-rtl838x/mach-rtl83xx.h>
+#include <dt-bindings/leds/rtl838x-leds.h>
 #include <linux/etherdevice.h>
 #include <linux/iopoll.h>
+#include <linux/leds.h>
+#include <linux/version.h>
 #include <net/nexthop.h>
 
 #include "rtl83xx.h"
@@ -1686,6 +1689,562 @@ void rtl838x_set_receive_management_action(int port, rma_ctrl_t type, action_typ
 		break;
 	}
 }
+static u32 sw_ctrl_port_regs[MAX_PORT_LEDS] = {
+	RTL838X_LED0_SW_P_EN_CTRL,
+	RTL838X_LED1_SW_P_EN_CTRL,
+	RTL838X_LED2_SW_P_EN_CTRL
+};
+
+static int rtl838x_led_set_port_led(struct rtl838x_port_led *port_led, bool sw_control, u8 led_mode) {
+	bool is_low_port;
+	is_low_port = port_led->port_index < 24;
+
+	if(port_led->port_index >= MAX_PORTS) {
+		dev_err(port_led->priv->dev, "SoC only supports up to %d ports, port %d is invalid.", MAX_PORTS, port_led->port_index);
+		return -EINVAL;
+	}
+	if(port_led->led_index >= MAX_PORT_LEDS) {
+		dev_err(port_led->priv->dev, "SoC only supports up to %d leds per port, led %d of port %d is invalid.", MAX_PORT_LEDS, port_led->led_index, port_led->port_index);
+		return -EINVAL;
+	}
+
+	// Enable/Disable software control
+	sw_w32_mask(
+		BIT(port_led->port_index),
+		sw_control ? BIT(port_led->port_index) : 0,
+		sw_ctrl_port_regs[port_led->led_index]
+	);
+
+	if(sw_control) {
+		dev_info/*dbg*/(port_led->priv->dev, "Setting led %d of port %d sw_control=%d led_mode=%d",
+			port_led->led_index, port_led->port_index, sw_control, led_mode);
+
+		// set software-controlled LED mode (on/off/blink)
+		sw_w32_mask(
+			(GENMASK(2, 0) << (port_led->led_index * 3)),
+			(led_mode      << (port_led->led_index * 3)),
+			RTL838X_LED_SW_P_CTRL_PORT(port_led->port_index)
+		);
+	}
+	else {
+		dev_info/*dbg*/(port_led->priv->dev, "Setting led %d of port-group %s (for port %d) sw_control=%d led_mode=%d",
+			port_led->led_index, is_low_port ? "low" : "high", port_led->port_index, sw_control, led_mode);
+
+		// set hardware-controlled LED mode (netdev)
+		sw_w32_mask(
+			GENMASK(14, 0) << (is_low_port ? 0 : 15),
+			led_mode       << (is_low_port ? 0 : 15),
+			RTL838X_LED_MODE_CTRL
+		);
+	}
+
+	return 0;
+}
+
+static void rtl838x_led_get_port_led(struct rtl838x_port_led *port_led, bool *sw_control, u8 *led_mode) {
+	u32 reg;
+	bool is_low_port;
+
+	is_low_port = port_led->port_index < 24;
+
+	reg = sw_r32(sw_ctrl_port_regs[port_led->led_index]);
+	*sw_control = (reg & BIT(port_led->port_index)) > 0;
+
+	if(*sw_control) {
+		reg = sw_r32(RTL838X_LED_SW_P_CTRL_PORT(port_led->port_index));
+		*led_mode = (reg >> (port_led->led_index * 3)) & GENMASK(2, 0);
+
+		dev_info/*dbg*/(port_led->priv->dev, "Read state of led %d of port %d as sw_control=%d led_mode=%d",
+			port_led->led_index, port_led->port_index, *sw_control, *led_mode);
+	}
+	else {
+		reg = sw_r32(RTL838X_LED_MODE_CTRL);
+		*led_mode = (reg >> (is_low_port ? 0 : 15) >> (port_led->led_index * 5)) & GENMASK(4, 0);
+
+		dev_info/*dbg*/(port_led->priv->dev, "Read state of led %d of port-group %s (for port %d) as sw_control=%d led_mode=%d",
+			port_led->led_index, is_low_port ? "low" : "high", port_led->port_index, *sw_control, *led_mode);
+	}
+}
+
+static int rtl838x_led_brightness_set_blocking(struct led_classdev *ldev, enum led_brightness brightness) {
+	struct rtl838x_port_led *port_led = container_of(ldev, struct rtl838x_port_led, cdev);
+	u8 led_mode = (brightness > 0) ? RTL838X_SW_P_LED_MODE_ON : RTL838X_SW_P_LED_MODE_OFF;
+	return rtl838x_led_set_port_led(port_led, true, led_mode);
+}
+
+static int rtl838x_led_blink_set(struct led_classdev *ldev, unsigned long *delay_on, unsigned long *delay_off) {
+	struct rtl838x_port_led *port_led = container_of(ldev, struct rtl838x_port_led, cdev);
+	unsigned long delay;
+	u8 led_mode;
+
+	if(*delay_on != *delay_off) {
+		dev_warn(port_led->priv->dev, "SoC only does not support offloading of asymmetric blinking, "
+			"falling back to software blinking. (on=%ldms, off=%ldms)", *delay_on, *delay_off);
+
+		return -EINVAL;
+	}
+	delay = *delay_on;
+
+	switch(delay) {
+		case 0:
+			led_mode = RTL838X_SW_P_LED_MODE_OFF;
+			break;
+
+		case 32:
+			led_mode = RTL838X_SW_P_LED_MODE_BLINK_32MS;
+			break;
+
+		case 64:
+			led_mode = RTL838X_SW_P_LED_MODE_BLINK_64MS;
+			break;
+
+		case 128:
+			led_mode = RTL838X_SW_P_LED_MODE_BLINK_128MS;
+			break;
+
+		case 256:
+			led_mode = RTL838X_SW_P_LED_MODE_BLINK_256MS;
+			break;
+
+		case 512:
+			led_mode = RTL838X_SW_P_LED_MODE_BLINK_512MS;
+			break;
+
+		case 1024:
+			led_mode = RTL838X_SW_P_LED_MODE_BLINK_1024MS;
+			break;
+
+		default:
+			dev_warn(port_led->priv->dev, "SoC does not support delay of %ldms, "
+				"falling back to software blinking. Supported delays for offloading: "
+				"32ms, 64ms, 128ms, 256ms, 512ms, 1024ms", delay);
+
+			return -EINVAL;
+	}
+
+	dev_info(port_led->priv->dev, "set led-blink: configuring hardware offloaded blinking at %ldms", delay);
+	return rtl838x_led_set_port_led(port_led, true, led_mode);
+}
+
+struct rtl838x_netdev_led_rule {
+	u8 mode;
+	unsigned long rules;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6,1,0)
+	/* in current stable-kernel (5.15) TRIGGER_NETDEV_LINK_1000 and the other speed-related contants
+	 * are not present yet. They are present in the current testing-kernel (6.1, backported from 6.5).
+	 *
+	 * Therfore, in the 5.15 kernel we can't express the desire to have on led be active for 1000M
+	 * connections and the other for 10M/100M connections. To overcome this limitation in the kernel
+	 * led netdev trigger interface, we use this preference to let the driver-code auto-select one
+	 * of the modes for the respective led, when link or link/active is selected.
+	 *
+	 * The selection code will run 2 passes over the array, first looking for a mode that is preferred
+	 * for this led, then, if not successful, a second pass to find the first matching mode.
+	 */
+	s8 preferred_for_led;
+#endif
+};
+
+static const struct rtl838x_netdev_led_rule rtl838x_netdev_led_rules[] = {
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_ACT,
+		.rules = (BIT(TRIGGER_NETDEV_TX) | BIT(TRIGGER_NETDEV_RX) |
+			BIT(TRIGGER_NETDEV_LINK)),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK,
+		.rules = BIT(TRIGGER_NETDEV_LINK),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_ACT,
+		.rules = (BIT(TRIGGER_NETDEV_RX) | BIT(TRIGGER_NETDEV_TX)),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_ACT_RX,
+		.rules = BIT(TRIGGER_NETDEV_RX),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_ACT_TX,
+		.rules = BIT(TRIGGER_NETDEV_TX),
+	},
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,1,0)
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_1G,
+		.rules = BIT(TRIGGER_NETDEV_LINK_1000),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_100M,
+		.rules = BIT(TRIGGER_NETDEV_LINK_100),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_10M,
+		.rules = BIT(TRIGGER_NETDEV_LINK_10),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_ACT_1G,
+		.rules = (BIT(TRIGGER_NETDEV_LINK_1000) |
+			BIT(TRIGGER_NETDEV_RX) | BIT(TRIGGER_NETDEV_TX)),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_ACT_100M,
+		.rules = (BIT(TRIGGER_NETDEV_LINK_100) |
+			BIT(TRIGGER_NETDEV_RX) | BIT(TRIGGER_NETDEV_TX)),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_ACT_10M,
+		.rules = (BIT(TRIGGER_NETDEV_LINK_10) |
+			BIT(TRIGGER_NETDEV_RX) | BIT(TRIGGER_NETDEV_TX)),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_ACT_1G_100M,
+		.rules = (BIT(TRIGGER_NETDEV_LINK_1000) | BIT(TRIGGER_NETDEV_LINK_100) |
+			BIT(TRIGGER_NETDEV_RX) | BIT(TRIGGER_NETDEV_TX)),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_ACT_1G_10M,
+		.rules = (BIT(TRIGGER_NETDEV_LINK_1000) | BIT(TRIGGER_NETDEV_LINK_10) |
+			BIT(TRIGGER_NETDEV_RX) | BIT(TRIGGER_NETDEV_TX)),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_ACT_100M_10M,
+		.rules = (BIT(TRIGGER_NETDEV_LINK_100) | BIT(TRIGGER_NETDEV_LINK_10) |
+			BIT(TRIGGER_NETDEV_RX) | BIT(TRIGGER_NETDEV_TX)),
+	},
+#else
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_1G,
+		.rules = BIT(TRIGGER_NETDEV_LINK),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_100M,
+		.rules = BIT(TRIGGER_NETDEV_LINK),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_10M,
+		.rules = BIT(TRIGGER_NETDEV_LINK),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_ACT_1G,
+		.rules = (BIT(TRIGGER_NETDEV_LINK) |
+			BIT(TRIGGER_NETDEV_RX) | BIT(TRIGGER_NETDEV_TX)),
+		.preferred_for_led = 1,
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_ACT_100M,
+		.rules = (BIT(TRIGGER_NETDEV_LINK) |
+			BIT(TRIGGER_NETDEV_RX) | BIT(TRIGGER_NETDEV_TX)),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_ACT_10M,
+		.rules = (BIT(TRIGGER_NETDEV_LINK) |
+			BIT(TRIGGER_NETDEV_RX) | BIT(TRIGGER_NETDEV_TX)),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_ACT_1G_100M,
+		.rules = (BIT(TRIGGER_NETDEV_LINK) |
+			BIT(TRIGGER_NETDEV_RX) | BIT(TRIGGER_NETDEV_TX)),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_ACT_1G_10M,
+		.rules = (BIT(TRIGGER_NETDEV_LINK) |
+			BIT(TRIGGER_NETDEV_RX) | BIT(TRIGGER_NETDEV_TX)),
+	},
+	{
+		.mode = RTL838X_LEDS_MODE_LINK_ACT_100M_10M,
+		.rules = (BIT(TRIGGER_NETDEV_LINK) |
+			BIT(TRIGGER_NETDEV_RX) | BIT(TRIGGER_NETDEV_TX)),
+		.preferred_for_led = 2,
+	},
+#endif
+	{
+		.mode = RTL838X_LEDS_MODE_DISABLED,
+		.rules = 0,
+	}
+};
+
+
+static int rtl838x_led_find_mode_by_netdev_rules(u8 led_index, unsigned long netdev_rules, u8 *led_mode) {
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(rtl838x_netdev_led_rules); i++) {
+		if (rtl838x_netdev_led_rules[i].rules == netdev_rules && 
+			rtl838x_netdev_led_rules[i].preferred_for_led == led_index + 1)
+		{
+			*led_mode = rtl838x_netdev_led_rules[i].mode;
+			return 0;
+		}
+	}
+	for (i = 0; i < ARRAY_SIZE(rtl838x_netdev_led_rules); i++) {
+		if (rtl838x_netdev_led_rules[i].rules == netdev_rules) {
+			*led_mode = rtl838x_netdev_led_rules[i].mode;
+			return 0;
+		}
+	}
+	return -EOPNOTSUPP;
+}
+
+
+static int rtl838x_led_find_netdev_rules_by_mode(unsigned long *netdev_rules, u8 led_mode) {
+	int i;
+
+	pr_info("rtl838x_led_find_netdev_rules_by_mode: led_mode=%d, ARRAY_SIZE(rtl838x_netdev_led_rules)=%d", led_mode, ARRAY_SIZE(rtl838x_netdev_led_rules));
+	for (i = 0; i < ARRAY_SIZE(rtl838x_netdev_led_rules); i++) {
+		if (rtl838x_netdev_led_rules[i].mode == led_mode) {
+			*netdev_rules = rtl838x_netdev_led_rules[i].rules;
+			pr_info("rtl838x_led_find_netdev_rules_by_mode: *netdev_rules=%ld, i=%d", *netdev_rules, i);
+			return 0;
+		}
+	}
+	return -EOPNOTSUPP;
+}
+
+
+static int rtl838x_led_hw_control_is_supported(struct led_classdev *ldev, unsigned long rules) {
+	pr_info("rtl838x_led_hw_control_is_supported()");
+	return 0;
+
+	struct rtl838x_port_led *port_led = container_of(ldev, struct rtl838x_port_led, cdev);
+	u8 led_mode;
+
+	return rtl838x_led_find_mode_by_netdev_rules(port_led->led_index, rules, &led_mode);
+}
+
+
+static int rtl838x_led_hw_control_set(struct led_classdev *ldev, unsigned long rules) {
+	pr_info("rtl838x_led_hw_control_set()");
+	return 0;
+
+	struct rtl838x_port_led *port_led = container_of(ldev, struct rtl838x_port_led, cdev);
+	int ret;
+	u8 led_mode;
+
+	pr_info("rtl838x_led_hw_control_set(): port_led=%p", port_led);
+
+	dev_info/*dbg*/(port_led->priv->dev, "Request for hw-control with netdev-rules=%08lx for led %d of port %d",
+		rules, port_led->led_index, port_led->port_index);
+	ret = rtl838x_led_find_mode_by_netdev_rules(port_led->led_index, rules, &led_mode);
+	if(ret < 0)
+		return ret;
+
+	return rtl838x_led_set_port_led(port_led, false, led_mode);
+}
+
+
+static int rtl838x_led_hw_control_get(struct led_classdev *ldev, unsigned long *rules) {
+	pr_info("rtl838x_led_hw_control_get(rules=%x)");
+	set_bit(TRIGGER_NETDEV_TX, rules);
+	set_bit(TRIGGER_NETDEV_RX, rules);
+	pr_info("rtl838x_led_hw_control_get(rules=%x) -> 0");
+	return 0;
+
+	struct rtl838x_port_led *port_led = container_of(ldev, struct rtl838x_port_led, cdev);
+	bool sw_control;
+	u8 led_mode;
+
+	dev_info/*dbg*/(port_led->priv->dev, "rtl838x_led_hw_control_get");
+
+	rtl838x_led_get_port_led(port_led, &sw_control, &led_mode);
+	dev_info/*dbg*/(port_led->priv->dev, "rtl838x_led_hw_control_get: sw_control=%d, led_mode=%d", sw_control, led_mode);
+	if(sw_control)
+		return -EINVAL;
+
+	dev_info/*dbg*/(port_led->priv->dev, "rtl838x_led_hw_control_get -> rtl838x_led_find_netdev_rules_by_mode");
+	return rtl838x_led_find_netdev_rules_by_mode(rules, led_mode);
+}
+
+
+static int rtl838x_led_init_port_led(struct rtl838x_switch_priv *priv, struct fwnode_handle *led, u32 port_index, u32 *installed_leds) {
+	u32 led_index = 0;
+	int ret;
+	struct rtl838x_port_led *port_led;
+	struct rtl838x_port *port;
+	struct led_init_data init_data = { };
+
+	fwnode_property_read_u32(led, "reg", &led_index);
+	dev_info/*dbg*/(priv->dev, "Configuring led %d of port %d", led_index, port_index);
+
+	if(port_index >= MAX_PORTS) {
+		dev_err(priv->dev, "SoC only supports up to %d ports, port %d is invalid.", MAX_PORTS, port_index);
+		return -EINVAL;
+	}
+	if(led_index >= MAX_PORT_LEDS) {
+		dev_err(priv->dev, "SoC only supports up to %d leds per port, led %d of port %d is invalid.", MAX_PORT_LEDS, led_index, port_index);
+		return -EINVAL;
+	}
+
+	*installed_leds |= BIT(led_index);
+
+	port = &priv->ports[port_index];
+	port_led = &port->leds[led_index];
+
+	port_led->port_index = port_index;
+	port_led->led_index = led_index;
+	port_led->priv = priv;
+
+	port_led->cdev.name = kasprintf(GFP_KERNEL, "led:%02d", port_index);
+	port_led->cdev.brightness = 0;
+	port_led->cdev.max_brightness = 1;
+	port_led->cdev.brightness_set_blocking = rtl838x_led_brightness_set_blocking;
+	port_led->cdev.blink_set = rtl838x_led_blink_set;
+	port_led->cdev.hw_control_is_supported = rtl838x_led_hw_control_is_supported;
+	port_led->cdev.hw_control_set = rtl838x_led_hw_control_set;
+	port_led->cdev.hw_control_get = rtl838x_led_hw_control_get;
+	//port_led->cdev.default_trigger = "netdev";
+	port_led->cdev.hw_control_trigger = "netdev";
+	//port_led->cdev.hw_control_get_device =
+
+	init_data.default_label = ":port";
+	init_data.fwnode = led;
+	init_data.devname_mandatory = true;
+	init_data.devicename = kasprintf(GFP_KERNEL, "port:%02d", port_index);
+	if (!init_data.devicename)
+		return -ENOMEM;
+
+	ret = devm_led_classdev_register_ext(priv->dev, &port_led->cdev, &init_data);
+	if (ret < 0) {
+		dev_err(priv->dev, "Failed to configure led-subsystem for led %d of port %d",
+			led_index, port_index);
+	}
+
+	kfree(init_data.devicename);
+	kfree(port_led->cdev.name);
+
+	return ret;
+}
+
+
+static int rtl838x_led_init_port(struct rtl838x_switch_priv *priv, struct fwnode_handle *port, bool first_port, u32 *enabled_ports, u32 *installed_leds) {
+	u32 port_index = 0;
+	u32 this_port_installed_leds = 0x0;
+
+	struct fwnode_handle *port_leds_config, *led;
+
+	fwnode_property_read_u32(port, "reg", &port_index);
+	if(port_index > 27) {
+		dev_warn(priv->dev, "Port %d out of range for led configuration, ignoring", port_index);
+		return 0;
+	}
+
+	dev_dbg(priv->dev, "Configuring leds of port %d", port_index);
+
+	port_leds_config = fwnode_get_named_child_node(port, "leds");
+	if (!port_leds_config) {
+		dev_info(priv->dev, "No leds node for port %d, ignoring", port_index);
+		return 0;
+	}
+
+	fwnode_for_each_child_node(port_leds_config, led) {
+		int r = rtl838x_led_init_port_led(priv, led, port_index, &this_port_installed_leds);
+		if(r < 0) {
+			dev_err(priv->dev, "Error initializing leds of port %d: rtl838x_led_init_port_led=%d", port_index, r);
+			return r;
+		}
+	}
+
+	*enabled_ports |= BIT(port_index);
+
+	if(first_port) {
+		dev_dbg(priv->dev, "First port this_port_installed_leds=%02x", this_port_installed_leds);
+		*installed_leds = this_port_installed_leds;
+	}
+	else {
+		dev_dbg(priv->dev, "Successive port this_port_installed_leds=%02x installed_leds=%02x", this_port_installed_leds, *installed_leds);
+
+		if(*installed_leds != this_port_installed_leds) {
+			dev_err(priv->dev, "Port %d leds configured as %02x but previous ports already configured as %02x - SoC can only handle one configuration for all leds",
+				port_index, this_port_installed_leds, *installed_leds);
+
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+
+static void rtl838x_led_init(struct rtl838x_switch_priv *priv)
+{
+	struct fwnode_handle *global_port_leds_config, *ports, *port;
+
+	u32 led_control_mode = RTL838X_LEDS_CONTROL_MODE_DISABLED;
+	u32 power_on_blink = true;
+
+	u32 led_mode_sel = 0x0, led_mode_ctrl = 0x0;
+	u32 led_glb_ctrl = 0x0, led_p_en_ctrl = 0x0;
+
+	// initial modes, later controlled via kernel leds module
+	// FIXME for the hp the öeds are switched; green is LED2 and amber is LED1, this would be a regression (unexpected functionality change)
+	u32 led_mode[6] = {
+		// low ports (Copper)
+		RTL838X_LEDS_MODE_LINK_ACT_1G, // LED 1
+		RTL838X_LEDS_MODE_LINK_ACT_100M_10M, // LED 2
+		RTL838X_LEDS_MODE_DISABLED, // LED 3
+
+		// high ports (Fiber)
+		RTL838X_LEDS_MODE_LINK_ACT_1G,       // LED 1
+		RTL838X_LEDS_MODE_LINK_ACT_100M_10M, // LED 2
+		RTL838X_LEDS_MODE_DISABLED           // LED 3
+	};
+
+	u32 installed_leds = 0x0;
+	bool first_port;
+
+	dev_info(priv->dev, "Configuring leds");
+
+	// global leds configuration
+	global_port_leds_config = device_get_named_child_node(priv->dev, "port-leds");
+	if (!global_port_leds_config) {
+		dev_info(priv->dev, "No port-leds node specified, not configuring port-leds");
+		return;
+	}
+
+	// calculate led_mode_sel
+	fwnode_property_read_u32(global_port_leds_config, "led-control-mode", &led_control_mode);
+	led_mode_sel = (power_on_blink<<2) | led_control_mode;
+
+	// calculate led_mode_ctrl
+	led_mode_ctrl =
+		(led_mode[5] << 25) |
+		(led_mode[4] << 20) |
+		(led_mode[3] << 15) |
+		(led_mode[2] << 10) |
+		(led_mode[1] <<  5) |
+		(led_mode[0] <<  0);
+
+	// initialize ports
+	ports = device_get_named_child_node(priv->dev, "ports");
+	if (!ports) {
+		dev_info(priv->dev, "No ports node specified, not configuring port-leds");
+		return;
+	}
+	first_port = true;
+	fwnode_for_each_child_node(ports, port) {
+		int r = rtl838x_led_init_port(priv, port, first_port, &led_p_en_ctrl, &installed_leds);
+		if(r < 0) {
+			dev_err(priv->dev, "Error initializing leds: rtl838x_led_init_port=%d", r);
+			return;
+		}
+
+		first_port = false;
+	}
+
+	// calculate led_glb_ctrl
+	led_glb_ctrl =
+		(installed_leds << 3) |
+		(installed_leds << 0);
+
+	// write config registers
+	dev_dbg(priv->dev, "led_glb_ctrl=%08x/%08x led_mode_sel=%08x "
+		"led_p_en_ctrl=%08x led_mode_ctrl=%08x",
+		led_glb_ctrl, (u32)GENMASK(5, 0), led_mode_sel,
+		led_p_en_ctrl, led_mode_ctrl);
+
+	sw_w32_mask(GENMASK(5, 0), led_glb_ctrl, RTL838X_LED_GLB_CTRL);
+	sw_w32(led_mode_sel, RTL838X_LED_MODE_SEL);
+	sw_w32(led_mode_ctrl, RTL838X_LED_MODE_CTRL);
+	sw_w32(led_p_en_ctrl, RTL838X_LED_P_EN_CTRL);
+}
+
 
 const struct rtl838x_reg rtl838x_reg = {
 	.mask_port_reg_be = rtl838x_mask_port_reg,
@@ -1772,6 +2331,7 @@ const struct rtl838x_reg rtl838x_reg = {
 	.l3_setup = rtl838x_l3_setup,
 	.set_distribution_algorithm = rtl838x_set_distribution_algorithm,
 	.set_receive_management_action = rtl838x_set_receive_management_action,
+	.led_init = rtl838x_led_init,
 };
 
 irqreturn_t rtl838x_switch_irq(int irq, void *dev_id)

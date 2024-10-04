@@ -590,6 +590,25 @@ typedef enum {
 #define RTL931X_LED_PORT_FIB_MASK_CTRL		(0x065c)
 #define RTL931X_LED_PORT_COMBO_MASK_CTRL	(0x0664)
 
+// https://svanheule.net/realtek/maple/register/led_mode_ctrl
+#define RTL838X_LEDS_MODE_LINK_ACT (0)
+#define RTL838X_LEDS_MODE_LINK (1)
+#define RTL838X_LEDS_MODE_ACT (2)
+#define RTL838X_LEDS_MODE_ACT_RX (3)
+#define RTL838X_LEDS_MODE_ACT_TX (4)
+#define RTL838X_LEDS_MODE_LINK_1G (7)
+#define RTL838X_LEDS_MODE_LINK_100M (8)
+#define RTL838X_LEDS_MODE_LINK_10M (9)
+#define RTL838X_LEDS_MODE_LINK_ACT_1G (10)
+#define RTL838X_LEDS_MODE_LINK_ACT_100M (11)
+#define RTL838X_LEDS_MODE_LINK_ACT_10M (12)
+#define RTL838X_LEDS_MODE_LINK_ACT_1G_100M (13)
+#define RTL838X_LEDS_MODE_LINK_ACT_1G_10M (14)
+#define RTL838X_LEDS_MODE_LINK_ACT_100M_10M (15)
+#define RTL838X_LEDS_MODE_DISABLED (31)
+
+#define MAX_PORTS 57
+#define MAX_PORT_LEDS 3
 #define MAX_VLANS 4096
 #define MAX_LAGS 16
 #define MAX_PRIOS 8
@@ -631,6 +650,13 @@ enum pbvlan_mode {
 	PBVLAN_MODE_ALL_PKT,
 };
 
+struct rtl838x_port_led {
+	u32 port_index;
+	u32 led_index;
+	struct rtl838x_switch_priv *priv;
+	struct led_classdev cdev;
+};
+
 struct rtl838x_port {
 	bool enable;
 	u64 pm;
@@ -644,6 +670,7 @@ struct rtl838x_port {
 	int led_set;
 	int leds_on_this_port;
 	const struct dsa_port *dp;
+	struct rtl838x_port_led leds[MAX_PORT_LEDS];
 };
 
 struct rtl838x_pcs {
@@ -1070,8 +1097,8 @@ struct rtl838x_switch_priv {
 	u16 id;
 	u16 family_id;
 	char version;
-	struct rtl838x_port ports[57];
-	struct rtl838x_pcs pcs[57];
+	struct rtl838x_port ports[MAX_PORTS];
+	struct rtl838x_pcs pcs[MAX_PORTS];
 	struct mutex reg_mutex;		/* Mutex for individual register manipulations */
 	struct mutex pie_mutex;		/* Mutex for Packet Inspection Engine */
 	int link_state_irq;
@@ -1090,7 +1117,7 @@ struct rtl838x_switch_priv {
 	u64 lags_port_members[MAX_LAGS];
 	struct net_device *lag_devs[MAX_LAGS];
 	u32 lag_primary[MAX_LAGS];
-	u32 is_lagmember[57];
+	u32 is_lagmember[MAX_PORTS];
 	u64 lagmembers;
 	struct notifier_block nb;  /* TODO: change to different name */
 	struct notifier_block ne_nb;
