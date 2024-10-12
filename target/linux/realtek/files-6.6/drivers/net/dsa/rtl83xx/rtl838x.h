@@ -590,6 +590,23 @@ typedef enum {
 #define RTL931X_LED_PORT_FIB_MASK_CTRL		(0x065c)
 #define RTL931X_LED_PORT_COMBO_MASK_CTRL	(0x0664)
 
+// https://svanheule.net/realtek/maple/register/led_mode_ctrl
+#define RTL838X_LEDS_MODE_LINK_ACT (0)
+#define RTL838X_LEDS_MODE_LINK (1)
+#define RTL838X_LEDS_MODE_ACT (2)
+#define RTL838X_LEDS_MODE_ACT_RX (3)
+#define RTL838X_LEDS_MODE_ACT_TX (4)
+#define RTL838X_LEDS_MODE_LINK_1G (7)
+#define RTL838X_LEDS_MODE_LINK_100M (8)
+#define RTL838X_LEDS_MODE_LINK_10M (9)
+#define RTL838X_LEDS_MODE_LINK_ACT_1G (10)
+#define RTL838X_LEDS_MODE_LINK_ACT_100M (11)
+#define RTL838X_LEDS_MODE_LINK_ACT_10M (12)
+#define RTL838X_LEDS_MODE_LINK_ACT_1G_100M (13)
+#define RTL838X_LEDS_MODE_LINK_ACT_1G_10M (14)
+#define RTL838X_LEDS_MODE_LINK_ACT_100M_10M (15)
+#define RTL838X_LEDS_MODE_DISABLED (31)
+
 #define MAX_VLANS 4096
 #define MAX_LAGS 16
 #define MAX_PRIOS 8
@@ -630,6 +647,19 @@ enum pbvlan_mode {
 	PBVLAN_MODE_UNTAG_AND_PRITAG = 0,
 	PBVLAN_MODE_UNTAG_ONLY,
 	PBVLAN_MODE_ALL_PKT,
+};
+
+struct rtl838x_portgroup_led_config {
+	u32 installed_leds_mask;
+
+	// mode of led 0, 1 and 2
+	u32 led_modes[3];
+};
+
+struct rtl838x_led_config {
+	u32 enabled_ports_mask;
+	struct rtl838x_portgroup_led_config low_ports;
+	struct rtl838x_portgroup_led_config high_ports;
 };
 
 struct rtl838x_port {
