@@ -7,4 +7,10 @@ menuconfig LEDS_RTL
 
 if LEDS_RTL
 
+config LEDS_RTL_SWITCHCORE_PORT
+	bool "Realtek switch SoC port LED support"
+	depends on LEDS_CLASS
+	help
+	  This option enables support for Realtek switch SoC port LEDs.
+
 endif # LED_RTL

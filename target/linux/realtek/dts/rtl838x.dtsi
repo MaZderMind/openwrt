@@ -123,7 +123,7 @@
 	};
 
 	chosen {
-		bootargs = "earlycon";
+		bootargs = "earlycon dyndbg=\"file rtl838x.c +p\"";
 		stdout-path = "serial0:115200n8";
 	};
 
