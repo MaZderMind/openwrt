@@ -1689,24 +1689,6 @@ void rtl838x_set_receive_management_action(int port, rma_ctrl_t type, action_typ
 	}
 }
 
-static u32 rtl838x_led_mode_for_function(const char* led_function) {
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_LINK_ACT) == 0) return RTL838X_LEDS_MODE_LINK_ACT;
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_LINK) == 0) return RTL838X_LEDS_MODE_LINK;
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_ACT) == 0) return RTL838X_LEDS_MODE_ACT;
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_ACT_RX) == 0) return RTL838X_LEDS_MODE_ACT_RX;
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_ACT_TX) == 0) return RTL838X_LEDS_MODE_ACT_TX;
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_LINK_1G) == 0) return RTL838X_LEDS_MODE_LINK_1G;
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_LINK_100M) == 0) return RTL838X_LEDS_MODE_LINK_100M;
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_LINK_10M) == 0) return RTL838X_LEDS_MODE_LINK_10M;
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_LINK_ACT_1G) == 0) return RTL838X_LEDS_MODE_LINK_ACT_1G;
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_LINK_ACT_100M) == 0) return RTL838X_LEDS_MODE_LINK_ACT_100M;
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_LINK_ACT_10M) == 0) return RTL838X_LEDS_MODE_LINK_ACT_10M;
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_LINK_ACT_1G_100M) == 0) return RTL838X_LEDS_MODE_LINK_ACT_1G_100M;
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_LINK_ACT_1G_10M) == 0) return RTL838X_LEDS_MODE_LINK_ACT_1G_10M;
-	if(strcmp(led_function, RTL838X_LEDS_FUNCTION_LINK_ACT_100M_10M) == 0) return RTL838X_LEDS_MODE_LINK_ACT_100M_10M;
-	return RTL838X_LEDS_MODE_DISABLED;
-}
-
 static void rtl838x_led_analyze_portgroup_config(struct rtl838x_switch_priv *priv, struct fwnode_handle *port, struct fwnode_handle *port_leds, struct rtl838x_portgroup_led_config *portgroup_config) {
 	struct fwnode_handle *led;
 	u32 port_index = 0;
@@ -1716,7 +1698,7 @@ static void rtl838x_led_analyze_portgroup_config(struct rtl838x_switch_priv *pri
 
 	fwnode_for_each_child_node(port_leds, led) {
 		u32 led_index = 0;
-		const char *led_function;
+		u32 trigger = RTL838X_LEDS_TRIGGER_DISABLED;
 
 		fwnode_property_read_u32(led, "reg", &led_index);
 		if(led_index > 3) {
@@ -1724,10 +1706,10 @@ static void rtl838x_led_analyze_portgroup_config(struct rtl838x_switch_priv *pri
 			goto next;
 		}
 
-		fwnode_property_read_string(led, "function", &led_function);
-		dev_dbg(priv->dev, "Found led-config of led %d of port %d with function %s", led_index, port_index, led_function);
+		fwnode_property_read_u32(led, "realtek,port-led-trigger", &trigger);
+		dev_dbg(priv->dev, "Found led-config of led %d of port %d with port-led-trigger %08x", led_index, port_index, trigger);
 		portgroup_config->installed_leds_mask |= BIT(led_index);
-		portgroup_config->led_modes[led_index] = rtl838x_led_mode_for_function(led_function);
+		portgroup_config->led_triggers[led_index] = trigger;
 
 next:
 		if(led) fwnode_handle_put(led);
@@ -1833,12 +1815,12 @@ static void rtl838x_led_init(struct rtl838x_switch_priv *priv) {
 	dev_dbg(priv->dev, "Analyzed configuraton in device-tree: "
 		"enabled_ports_mask=%08x "
 		"installed_leds_mask=%08x / %08x "
-		"led_modes=[%d,%d,%d] / [%d,%d,%d]",
+		"led_triggers=[%d,%d,%d] / [%d,%d,%d]",
 		led_config.enabled_ports_mask,
 		led_config.low_ports.installed_leds_mask,
 		led_config.high_ports.installed_leds_mask,
-		led_config.low_ports.led_modes[0], led_config.low_ports.led_modes[1], led_config.low_ports.led_modes[2],
-		led_config.high_ports.led_modes[0], led_config.high_ports.led_modes[1], led_config.high_ports.led_modes[2]);
+		led_config.low_ports.led_triggers[0], led_config.low_ports.led_triggers[1], led_config.low_ports.led_triggers[2],
+		led_config.high_ports.led_triggers[0], led_config.high_ports.led_triggers[1], led_config.high_ports.led_triggers[2]);
 
 	// calculate register values
 	led_glb_ctrl =
@@ -1851,12 +1833,12 @@ static void rtl838x_led_init(struct rtl838x_switch_priv *priv) {
 	led_mode_sel = (power_on_blink << 2) | led_control_mode;
 
 	led_mode_ctrl =
-		(led_config.high_ports.led_modes[2] << 25) |
-		(led_config.high_ports.led_modes[1] << 20) |
-		(led_config.high_ports.led_modes[0] << 15) |
-		(led_config.low_ports.led_modes[2] << 10) |
-		(led_config.low_ports.led_modes[1] <<  5) |
-		(led_config.low_ports.led_modes[0] <<  0);
+		(led_config.high_ports.led_triggers[2] << 25) |
+		(led_config.high_ports.led_triggers[1] << 20) |
+		(led_config.high_ports.led_triggers[0] << 15) |
+		(led_config.low_ports.led_triggers[2] << 10) |
+		(led_config.low_ports.led_triggers[1] <<  5) |
+		(led_config.low_ports.led_triggers[0] <<  0);
 
 	led_p_en_ctrl = led_config.enabled_ports_mask;
 

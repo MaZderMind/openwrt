@@ -67,7 +67,9 @@
 			led@##l { \
 				reg = <##l>; \
 				color = <##c>; \
-				function = ##n; \
+				function = LED_FUNCTION_LAN; \
+				linux,default-trigger = "realtek-switchport"; \
+				realtek,port-led-trigger = <##n>; \
 			}; \
 		}; \
 	};
