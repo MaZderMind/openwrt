@@ -1,0 +1,43 @@
+From d71ec8184236356c50088b00b2417fb142e72bd9 Mon Sep 17 00:00:00 2001
+From: Sander Vanheule <sander@svanheule.net>
+Date: Sun, 10 Jul 2022 11:31:53 +0200
+Subject: leds: add Realtek LED hardware directory
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Realtek LED hardware peripherals share some common features. They are
+typically controlled through a register field, a few bits in size. These
+allow the LED to be turned off or on, or toggled at one of a number of
+intervals.
+
+Signed-off-by: Sander Vanheule <sander@svanheule.net>
+Signed-off-by: Peter Körner <peter@mazdermind.de>
+---
+diff --git a/drivers/leds/Kconfig b/drivers/leds/Kconfig
+index 3132439f99e0..531487239a60 100644
+--- a/drivers/leds/Kconfig
++++ b/drivers/leds/Kconfig
+@@ -903,6 +903,9 @@ source "drivers/leds/rgb/Kconfig"
+ comment "LED Triggers"
+ source "drivers/leds/trigger/Kconfig"
+ 
++comment "Realtek LED drivers"
++source "drivers/leds/realtek/Kconfig"
++
+ comment "Simple LED drivers"
+ source "drivers/leds/simple/Kconfig"
+ 
+diff --git a/drivers/leds/Makefile b/drivers/leds/Makefile
+index d7348e8bc019..ab8fba96be3d 100644
+--- a/drivers/leds/Makefile
++++ b/drivers/leds/Makefile
+@@ -110,5 +110,8 @@ obj-$(CONFIG_LEDS_TRIGGERS)		+= trigger/
+ # LED Blink
+ obj-y					+= blink/
+ 
++# Realtek LED drivers
++obj-y					+= realtek/
++
+ # Simple LED drivers
+ obj-y					+= simple/
