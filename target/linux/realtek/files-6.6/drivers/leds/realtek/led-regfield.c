@@ -52,11 +52,19 @@ static int regfield_led_blink_set(struct led_classdev *led_cdev, unsigned long *
 {
 	struct rtl_regfield_led *led = rtl_to_regfield_led(led_cdev);
 	const struct rtl_regfield_led_blink_mode *blink = led->modes->blink;
-	u32 cycle_ms = *delay_on + *delay_off;
+	u32 cycle_ms;
 	int err;
 
+	if(*delay_on != *delay_off) {
+		dev_info(led_cdev->dev, "blink hardware offloading only supports symmetric blinking, "
+			"forcing delay_off = delay_on. (on=%ldms, off=%ldms)", *delay_on, *delay_off);
+		*delay_off = *delay_on;
+	}
+
+	cycle_ms = *delay_on + *delay_off;
+
 	if (cycle_ms == 0)
-		cycle_ms = 500;
+		cycle_ms = 512;
 
 	while (blink->toggle_ms && (blink + 1)->toggle_ms) {
 		/*
