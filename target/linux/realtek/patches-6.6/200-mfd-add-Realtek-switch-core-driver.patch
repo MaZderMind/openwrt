@@ -1,0 +1,50 @@
+From d4576c5670090297b903771726a526f81fdd8c7c Mon Sep 17 00:00:00 2001
+From: Sander Vanheule <sander@svanheule.net>
+Date: Mon, 11 Jul 2022 09:24:18 +0200
+Subject: mfd: add Realtek switch core driver
+
+Realtek managed switch SoCs such as the RTL8380 consist of a MIPS CPU
+with a number of basic peripherals, and an ethernet switch peripheral.
+Besides performing ethernet related tasks, this switch core also
+provides SoC management features. These switch core features are badly
+separated, and cannot be divided into distinct IO ranges.
+
+This MFD core driver is intended to manage the switch core regmap, and
+to expose some limited features that don't warrant their own driver,
+such as SoC identification.
+
+Signed-off-by: Sander Vanheule <sander@svanheule.net>
+Signed-off-by: Peter Körner <peter@mazdermind.de>
+---
+diff --git a/drivers/mfd/Kconfig b/drivers/mfd/Kconfig
+index 68d71b4b55bd..f310fb8ac0d0 100644
+--- a/drivers/mfd/Kconfig
++++ b/drivers/mfd/Kconfig
+@@ -1083,6 +1083,17 @@ config MFD_RETU
+ 	  Retu and Tahvo are a multi-function devices found on Nokia
+ 	  Internet Tablets (770, N800 and N810).
+ 
++config MFD_REALTEK_SWITCHCORE
++	bool "Realtek switch core driver"
++	select MFD_CORE
++	select REGMAP_MMIO
++	default RTL83XX
++	help
++	  Say yes here if you want to support the switch core found in RTL838x,
++	  RTL839x, RTL930x, and RTL931x SoCs. The switch core provides ethernet
++	  functionality, and management features for the SoC like pin control.
++	  The mfd cell drivers have to be selected separately.
++
+ config MFD_PCF50633
+ 	tristate "NXP PCF50633"
+ 	depends on I2C
+diff --git a/drivers/mfd/Makefile b/drivers/mfd/Makefile
+index db1ba39de3b5..084faa43ac9f 100644
+--- a/drivers/mfd/Makefile
++++ b/drivers/mfd/Makefile
+@@ -282,3 +282,5 @@ obj-$(CONFIG_MFD_ATC260X_I2C)	+= atc260x-i2c.o
+ 
+ obj-$(CONFIG_MFD_RSMU_I2C)	+= rsmu_i2c.o rsmu_core.o
+ obj-$(CONFIG_MFD_RSMU_SPI)	+= rsmu_spi.o rsmu_core.o
++
++obj-$(CONFIG_MFD_REALTEK_SWITCHCORE)	+= realtek-switchcore.o
