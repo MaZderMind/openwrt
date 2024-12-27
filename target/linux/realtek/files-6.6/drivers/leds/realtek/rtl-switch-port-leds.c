@@ -600,6 +600,7 @@ static const struct switch_port_led_config rtl839x_port_led_config = {
 	.assign_group = rtl839x_port_led_assign_group,
 };
 
+#if 0
 /* Custom LED trigger interface */
 static struct led_hw_trigger_type switch_port_rtl_hw_trigger_type;
 
@@ -750,7 +751,38 @@ static struct led_trigger switch_port_rtl_hw_trigger = {
 	.deactivate = switch_port_led_trigger_deactivate,
 	.trigger_type = &switch_port_rtl_hw_trigger_type,
 };
+#endif
 
+/* Netdev Trigger */
+static int switch_port_rtl_hw_control_is_supported(struct led_classdev *led_cdev, unsigned long rules)
+{
+	struct switch_port_led *pled = to_switch_port_led(led_cdev);
+	dev_info(pled->ctrl->dev, "In switch_port_rtl_hw_control_is_supported\n");
+	return 0;
+}
+
+static int switch_port_rtl_hw_control_set(struct led_classdev *led_cdev, unsigned long rules)
+{
+	struct switch_port_led *pled = to_switch_port_led(led_cdev);
+	dev_info(pled->ctrl->dev, "In switch_port_rtl_hw_control_set\n");
+	return 0;
+}
+
+static int switch_port_rtl_hw_control_get(struct led_classdev *led_cdev, unsigned long *rules)
+{
+	struct switch_port_led *pled = to_switch_port_led(led_cdev);
+	dev_info(pled->ctrl->dev, "In switch_port_rtl_hw_control_get\n");
+	return 0;
+}
+
+#if 0
+static struct device *switch_port_rtl_hw_control_get_device(struct led_classdev *led_cdev)
+{
+	struct switch_port_led *pled = to_switch_port_led(led_cdev);
+	dev_info(pled->ctrl->dev, "In switch_port_rtl_hw_control_get_device\n");
+	return NULL;
+}
+#endif
 
 /* Initialization */
 static int switch_port_register_classdev(struct switch_port_led *pled, struct fwnode_handle *fwnode)
@@ -766,8 +798,15 @@ static int switch_port_register_classdev(struct switch_port_led *pled, struct fw
 	rtl_regfield_led_init(&pled->led, field, fwnode, pled->ctrl->cfg->modes);
 
 	pled->led.commit = pled->ctrl->cfg->led_commit;
+	pled->led.cdev.hw_control_trigger = "netdev";
+	pled->led.cdev.hw_control_is_supported = switch_port_rtl_hw_control_is_supported;
+	pled->led.cdev.hw_control_set = switch_port_rtl_hw_control_set;
+	pled->led.cdev.hw_control_get = switch_port_rtl_hw_control_get;
+	//pled->led.cdev.hw_control_get_device = switch_port_rtl_hw_control_get_device;
+	#if 0
 	pled->led.cdev.trigger_type = &switch_port_rtl_hw_trigger_type;
 	pled->led.cdev.groups = rtl_hw_trigger_groups;
+	#endif
 
 	init_data.fwnode = fwnode;
 
@@ -914,9 +953,11 @@ static int realtek_port_led_probe(struct platform_device *pdev)
 		}
 	}
 
+	#if 0
 	err = devm_led_trigger_register(dev, &switch_port_rtl_hw_trigger);
 	if (err)
 		return dev_err_probe(dev, err, "failed to register private trigger");
+	#endif
 
 	for_each_child_of_node(np, child) {
 		if (of_n_addr_cells(child) != 3) {

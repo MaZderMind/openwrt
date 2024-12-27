@@ -326,7 +326,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <1>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@1.0.0 {
@@ -335,7 +335,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <2>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@2.0.0 {
@@ -344,7 +344,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <3>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@3.0.0 {
@@ -353,7 +353,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <4>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@4.0.0 {
@@ -362,7 +362,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <5>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@5.0.0 {
@@ -371,7 +371,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <6>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@6.0.0 {
@@ -380,7 +380,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <7>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@7.0.0 {
@@ -389,7 +389,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <8>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@8.0.0 {
@@ -398,7 +398,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <9>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@9.0.0 {
@@ -407,7 +407,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <10>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@10.0.0 {
@@ -416,7 +416,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <11>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@11.0.0 {
@@ -425,7 +425,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <12>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@12.0.0 {
@@ -434,7 +434,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <13>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@13.0.0 {
@@ -443,7 +443,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <14>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@14.0.0 {
@@ -452,7 +452,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <15>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@15.0.0 {
@@ -461,7 +461,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <16>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@16.0.0 {
@@ -470,7 +470,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <17>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@17.0.0 {
@@ -479,7 +479,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <18>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@18.0.0 {
@@ -488,7 +488,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <19>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@19.0.0 {
@@ -497,7 +497,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <20>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@20.0.0 {
@@ -506,7 +506,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <21>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@21.0.0 {
@@ -515,7 +515,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <22>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@22.0.0 {
@@ -524,7 +524,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <23>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@23.0.0 {
@@ -533,7 +533,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <24>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@24.0.0 {
@@ -542,7 +542,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <25>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@25.0.0 {
@@ -551,7 +551,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <26>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@26.0.0 {
@@ -560,7 +560,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <27>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@27.0.0 {
@@ -569,7 +569,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <28>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@28.0.0 {
@@ -578,7 +578,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <29>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@29.0.0 {
@@ -587,7 +587,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <30>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@30.0.0 {
@@ -596,7 +596,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <31>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@31.0.0 {
@@ -605,7 +605,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <32>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@32.0.0 {
@@ -614,7 +614,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <33>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@33.0.0 {
@@ -623,7 +623,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <34>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@34.0.0 {
@@ -632,7 +632,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <35>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@35.0.0 {
@@ -641,7 +641,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <36>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@36.0.0 {
@@ -650,7 +650,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <37>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@37.0.0 {
@@ -659,7 +659,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <38>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@38.0.0 {
@@ -668,7 +668,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <39>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@39.0.0 {
@@ -677,7 +677,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <40>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@40.0.0 {
@@ -686,7 +686,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <41>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@41.0.0 {
@@ -695,7 +695,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <42>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@42.0.0 {
@@ -704,7 +704,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <43>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@43.0.0 {
@@ -713,7 +713,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <44>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@44.0.0 {
@@ -722,7 +722,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <45>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@45.0.0 {
@@ -731,7 +731,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <46>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@46.0.0 {
@@ -740,7 +740,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <47>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@47.0.0 {
@@ -749,7 +749,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <48>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@48.0.0 {
@@ -758,7 +758,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <49>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 		led@49.0.0 {
@@ -767,7 +767,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_LAN;
 			function-enumerator = <50>;
-			linux,default-trigger = "realtek-switchport";
+			linux,default-trigger = "netdev";
 			realtek,port-led-trigger = <(RTL_LED_ACT | RTL_LED_LINK_10_100_1000)>;
 		};
 	};
