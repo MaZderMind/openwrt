@@ -14,6 +14,7 @@
 #include <linux/of_platform.h>
 #include <linux/platform_device.h>
 #include <linux/regmap.h>
+#include <net/dsa.h>
 
 #include "led-regfield.h"
 
@@ -757,32 +758,37 @@ static struct led_trigger switch_port_rtl_hw_trigger = {
 static int switch_port_rtl_hw_control_is_supported(struct led_classdev *led_cdev, unsigned long rules)
 {
 	struct switch_port_led *pled = to_switch_port_led(led_cdev);
-	dev_info(pled->ctrl->dev, "In switch_port_rtl_hw_control_is_supported\n");
+	dev_info(pled->ctrl->dev, "In switch_port_rtl_hw_control_is_supported rules=%lx\n", rules);
 	return 0;
 }
 
 static int switch_port_rtl_hw_control_set(struct led_classdev *led_cdev, unsigned long rules)
 {
 	struct switch_port_led *pled = to_switch_port_led(led_cdev);
-	dev_info(pled->ctrl->dev, "In switch_port_rtl_hw_control_set\n");
+	dev_info(pled->ctrl->dev, "In switch_port_rtl_hw_control_set rules=%lx\n", rules);
 	return 0;
 }
 
 static int switch_port_rtl_hw_control_get(struct led_classdev *led_cdev, unsigned long *rules)
 {
 	struct switch_port_led *pled = to_switch_port_led(led_cdev);
-	dev_info(pled->ctrl->dev, "In switch_port_rtl_hw_control_get\n");
+	dev_info(pled->ctrl->dev, "In switch_port_rtl_hw_control_get rules=%lx\n", *rules);
 	return 0;
 }
 
-#if 0
 static struct device *switch_port_rtl_hw_control_get_device(struct led_classdev *led_cdev)
 {
 	struct switch_port_led *pled = to_switch_port_led(led_cdev);
-	dev_info(pled->ctrl->dev, "In switch_port_rtl_hw_control_get_device\n");
-	return NULL;
+	struct dsa_switch *ds = dsa_switch_find(0, 0); // TODO can this be linked via the device-tree somehow instead of relying on getting the first/only dsa switch?
+	if (!ds)
+		return NULL;
+
+	struct dsa_port *dp = dsa_to_port(ds, pled->port);
+	if (!dp || !dp->slave)
+		return NULL;
+
+	return &dp->slave->dev;
 }
-#endif
 
 /* Initialization */
 static int switch_port_register_classdev(struct switch_port_led *pled, struct fwnode_handle *fwnode)
@@ -802,7 +808,7 @@ static int switch_port_register_classdev(struct switch_port_led *pled, struct fw
 	pled->led.cdev.hw_control_is_supported = switch_port_rtl_hw_control_is_supported;
 	pled->led.cdev.hw_control_set = switch_port_rtl_hw_control_set;
 	pled->led.cdev.hw_control_get = switch_port_rtl_hw_control_get;
-	//pled->led.cdev.hw_control_get_device = switch_port_rtl_hw_control_get_device;
+	pled->led.cdev.hw_control_get_device = switch_port_rtl_hw_control_get_device;
 	#if 0
 	pled->led.cdev.trigger_type = &switch_port_rtl_hw_trigger_type;
 	pled->led.cdev.groups = rtl_hw_trigger_groups;
